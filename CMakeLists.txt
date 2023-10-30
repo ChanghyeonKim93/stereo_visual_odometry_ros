@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(stereo_visual_odometry)
-message("   -- [PROJECT]: " ${CMAKE_PROJECT_NAME})
+message("-- [PROJECT]: " ${CMAKE_PROJECT_NAME})
+
+if (MSVC)
+    # warning level 4
+    add_compile_options(/W4)
+else()
+    # additional warnings
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
