@@ -18,6 +18,7 @@ class StereoVisualOdometryRos2 : public rclcpp::Node {
   ~StereoVisualOdometryRos2();
 
  private:
+  bool LoadConfigurationFiles();
   void CallbackMessagesForStereoImages(
       const sensor_msgs::msg::Image::ConstSharedPtr& msg_left,
       const sensor_msgs::msg::Image::ConstSharedPtr& msg_right);

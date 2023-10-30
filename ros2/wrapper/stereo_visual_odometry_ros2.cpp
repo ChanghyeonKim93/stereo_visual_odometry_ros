@@ -1,14 +1,20 @@
+#include <iostream>
 #include <memory>
 #include <string>
 
 #include "core/stereo_visual_odometry.h"
+#include "ros2/wrapper/stereo_visual_odometry_ros2.h"
 
 #include "rclcpp/rclcpp.hpp"
 
-#include "ros2/wrapper/stereo_visual_odometry_ros2.h"
+#include "yaml-cpp/yaml.h"
 
 StereoVisualOdometryRos2::StereoVisualOdometryRos2(const std::string& node_name)
     : Node(node_name) {
+  std::cerr << "Start\n";
+  if (!LoadConfigurationFiles())
+    throw std::runtime_error("Load configuration is failed.");
+
   stereo_vo_ = std::make_unique<StereoVisualOdometry>();
 
   // Subscribers
@@ -23,6 +29,21 @@ StereoVisualOdometryRos2::StereoVisualOdometryRos2(const std::string& node_name)
 }
 
 StereoVisualOdometryRos2::~StereoVisualOdometryRos2() {}
+
+bool StereoVisualOdometryRos2::LoadConfigurationFiles() {
+  YAML::Node config = YAML::LoadFile(
+      "/home/kch/ros2_ws/src/stereo_visual_odometry_ros/config/"
+      "user_parameter2.yaml");
+
+  if (config["feature_extractor.af"]) {
+    std::cerr << "Last logged in: " << config["feature_extractor.af"].as<int>()
+              << "\n";
+  } else {
+    return false;
+  }
+
+  return true;
+}
 
 void StereoVisualOdometryRos2::CallbackMessagesForStereoImages(
     const sensor_msgs::msg::Image::ConstSharedPtr& msg_left,
