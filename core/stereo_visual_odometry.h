@@ -1,9 +1,13 @@
-#ifndef STEREO_VISUAL_ODOMETRY_H_
-#define STEREO_VISUAL_ODOMETRY_H_
+/*
+Copyright 2023 Changhyeon Kim
+*/
+
+#ifndef CORE_STEREO_VISUAL_ODOMETRY_H_
+#define CORE_STEREO_VISUAL_ODOMETRY_H_
 
 class StereoVisualOdometry {
  public:
   StereoVisualOdometry();
 };
 
-#endif
+#endif  // CORE_STEREO_VISUAL_ODOMETRY_H_

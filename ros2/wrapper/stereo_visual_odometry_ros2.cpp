@@ -1,3 +1,7 @@
+/*
+Copyright 2023 Changhyeon Kim
+*/
+
 #include <iostream>
 #include <memory>
 #include <string>

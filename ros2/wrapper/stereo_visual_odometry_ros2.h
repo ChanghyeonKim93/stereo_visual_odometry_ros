@@ -1,5 +1,12 @@
-#ifndef ROS2_STEREO_VISUAL_ODOMETRY_STEREO_VISUAL_ODOMETRY_ROS2_H_
-#define ROS2_STEREO_VISUAL_ODOMETRY_STEREO_VISUAL_ODOMETRY_ROS2_H_
+/*
+Copyright 2023 Changhyeon Kim
+*/
+
+#ifndef ROS2_WRAPPER_STEREO_VISUAL_ODOMETRY_ROS2_H_
+#define ROS2_WRAPPER_STEREO_VISUAL_ODOMETRY_ROS2_H_
+
+#include <memory>
+#include <string>
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
@@ -14,7 +21,7 @@ using ImageMsg = sensor_msgs::msg::Image;
 
 class StereoVisualOdometryRos2 : public rclcpp::Node {
  public:
-  StereoVisualOdometryRos2(const std::string& node_name);
+  explicit StereoVisualOdometryRos2(const std::string& node_name);
   ~StereoVisualOdometryRos2();
 
  private:
@@ -37,4 +44,4 @@ class StereoVisualOdometryRos2 : public rclcpp::Node {
       stereo_synchronizer_;
 };
 
-#endif
+#endif  // ROS2_WRAPPER_STEREO_VISUAL_ODOMETRY_ROS2_H_
