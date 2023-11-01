@@ -13,17 +13,19 @@ Copyright 2023 Changhyeon Kim
 
 #include "yaml-cpp/yaml.h"
 
+namespace visual_odometry {
+
 StereoVisualOdometryRos2::StereoVisualOdometryRos2(const std::string& node_name)
     : Node(node_name) {
   std::cerr << "Start\n";
   if (!LoadConfigurationFiles())
     throw std::runtime_error("Load configuration is failed.");
 
-  stereo_vo_ = std::make_unique<StereoVisualOdometry>();
+  stereo_visual_odometry_ = std::make_unique<StereoVisualOdometry>();
 
   // Subscribers
-  subscriber_left_image_.subscribe(this, topic_names.left_image);
-  subscriber_right_image_.subscribe(this, topic_names.right_image);
+  subscriber_left_image_.subscribe(this, topic_names.subscribe.left_image);
+  subscriber_right_image_.subscribe(this, topic_names.subscribe.right_image);
   stereo_synchronizer_ =
       std::make_shared<message_filters::TimeSynchronizer<ImageMsg, ImageMsg>>(
           subscriber_left_image_, subscriber_right_image_, 10);
@@ -55,3 +57,5 @@ void StereoVisualOdometryRos2::CallbackMessagesForStereoImages(
   (void)msg_left;
   (void)msg_right;
 }
+
+}  // namespace visual_odometry

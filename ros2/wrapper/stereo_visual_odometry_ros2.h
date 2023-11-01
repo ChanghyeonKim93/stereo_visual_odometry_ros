@@ -19,6 +19,8 @@ Copyright 2023 Changhyeon Kim
 
 using ImageMsg = sensor_msgs::msg::Image;
 
+namespace visual_odometry {
+
 class StereoVisualOdometryRos2 : public rclcpp::Node {
  public:
   explicit StereoVisualOdometryRos2(const std::string& node_name);
@@ -32,16 +34,24 @@ class StereoVisualOdometryRos2 : public rclcpp::Node {
 
  private:
   struct {
-    std::string left_image;
-    std::string right_image;
+    struct {
+      std::string left_image{""};
+      std::string right_image{""};
+    } subscribe;
+    struct {
+      std::string pose{""};
+      std::string trajectory{""};
+    } publish;
   } topic_names;
 
-  std::unique_ptr<StereoVisualOdometry> stereo_vo_;
+  std::unique_ptr<StereoVisualOdometry> stereo_visual_odometry_;
 
   message_filters::Subscriber<ImageMsg> subscriber_left_image_;
   message_filters::Subscriber<ImageMsg> subscriber_right_image_;
   std::shared_ptr<message_filters::TimeSynchronizer<ImageMsg, ImageMsg>>
       stereo_synchronizer_;
 };
+
+}  // namespace visual_odometry
 
 #endif  // ROS2_WRAPPER_STEREO_VISUAL_ODOMETRY_ROS2_H_
