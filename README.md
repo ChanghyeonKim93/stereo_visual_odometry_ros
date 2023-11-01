@@ -1,1 +1,1 @@
-# stereo_visual_odometry_ros
+# stereo_visual_odometry_ros2
