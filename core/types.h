@@ -7,6 +7,7 @@
 #define CORE_TYPES_H_
 
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 #include "eigen3/Eigen/Dense"
@@ -19,6 +20,7 @@ using Pixel = Eigen::Vector2f;
 using Position = Eigen::Vector3f;
 using Rotation = Eigen::Matrix3f;
 using Quaternion = Eigen::Quaternionf;
+using Descriptor = std::vector<uint8_t>;
 
 class Camera;
 class Frame;
@@ -29,6 +31,13 @@ using CameraPtr = std::shared_ptr<Camera>;
 using FramePtr = std::shared_ptr<Frame>;
 using BodyFramePtr = std::shared_ptr<BodyFrame>;
 using LandmarkPtr = std::shared_ptr<Landmark>;
+
+struct Feature {
+  Pixel pixel{Pixel::Zero()};
+  Descriptor descriptor{};
+  int scale_level{0};
+  float feature_angle{0.0f};
+};
 
 class Camera {
  public:
@@ -96,23 +105,52 @@ class Camera {
 };
 
 class Frame {
+ public:
+  static int id_counter_;
+
  private:
   int id_;
   CameraPtr related_camera_ptr_{nullptr};
+  std::unordered_set<LandmarkPtr> observed_landmark_set_;
 };
 
 class BodyFrame {
+ public:
+  static int id_counter_;
+
  private:
   int id_;
   FramePtr left_frame_{nullptr};
   FramePtr right_frame_{nullptr};
+  Pose world_to_body_frame_pose_;
 };
 
 class Landmark {
+ public:
+  static int id_counter_;
+
+ public:  // getters
+  const int GetId() const { return id_; }
+  const Point& GetWorldPoint() const { return world_point_; }
+  const std::unordered_set<FramePtr>& GetRelatedFrameSet() const {
+    return related_frame_set_;
+  }
+
+ public:  // setters
+  void AddRelatedFrame(const FramePtr& frame) {
+    related_frame_set_.insert(frame);
+  }
+  void SetWorldPoint(const Point& world_point) { world_point_ = world_point; }
+
  private:
   int id_;
-  std::vector<FramePtr> related_frame_list_;
+  Point world_point_;  // world point
+  std::unordered_set<FramePtr> related_frame_set_;
 };
+
+int Frame::id_counter_{0};
+int BodyFrame::id_counter_{0};
+int Landmark::id_counter_{0};
 
 }  // namespace visual_odometry
 
