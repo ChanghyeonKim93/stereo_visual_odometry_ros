@@ -82,14 +82,14 @@ class Camera {
         T_c2b_(rhs.T_c2b_) {}
 
  public:  // Getters
-  const int GetImageHeight() const { return image_height_; }
-  const int GetImageWidth() const { return image_width_; }
-  const float GetFx() const { return fx_; }
-  const float GetFy() const { return fy_; }
-  const float GetCx() const { return cx_; }
-  const float GetCy() const { return cy_; }
-  const float GetInverseFx() const { return inv_fx_; }
-  const float GetInverseFx() const { return inv_fy_; }
+  int GetImageHeight() const { return image_height_; }
+  int GetImageWidth() const { return image_width_; }
+  float GetFx() const { return fx_; }
+  float GetFy() const { return fy_; }
+  float GetCx() const { return cx_; }
+  float GetCy() const { return cy_; }
+  float GetInverseFx() const { return inv_fx_; }
+  float GetInverseFy() const { return inv_fy_; }
 
  private:
   int image_height_;
@@ -106,20 +106,65 @@ class Camera {
 
 class Frame {
  public:
-  static int id_counter_;
+  inline static int id_counter_{0};
+
+ public:
+  explicit Frame(const BodyFramePtr& parent_body_frame,
+                 const CameraPtr& related_camera_ptr)
+      : id_(id_counter_++),
+        parent_body_frame_(parent_body_frame),
+        related_camera_ptr_(related_camera_ptr) {}
+
+ public:  // getters
+  const BodyFramePtr& GetParentBodyFrame() const { return parent_body_frame_; }
+  const CameraPtr& GetRelatedCamera() const { return related_camera_ptr_; }
+  const std::unordered_set<LandmarkPtr>& GetObservedLandmarkSet() const {
+    return observed_landmark_set_;
+  }
+
+ public:  // setters
+  void AddObservedLandmark(const LandmarkPtr& landmark) {
+    observed_landmark_set_.insert(landmark);
+  }
 
  private:
   int id_;
+  BodyFramePtr parent_body_frame_{nullptr};
   CameraPtr related_camera_ptr_{nullptr};
   std::unordered_set<LandmarkPtr> observed_landmark_set_;
 };
 
 class BodyFrame {
  public:
-  static int id_counter_;
+  inline static int id_counter_{0};
+  explicit BodyFrame(const double timestamp)
+      : id_(id_counter_++),
+        timestamp_(timestamp),
+        left_frame_(nullptr),
+        right_frame_(nullptr),
+        world_to_body_frame_pose_(Pose::Identity()) {}
+
+ public:  // getters
+  int GetId() const { return id_; }
+  double GetTimestamp() const { return timestamp_; }
+  const FramePtr& GetLeftFrame() const { return left_frame_; }
+  const FramePtr& GetRightFrame() const { return right_frame_; }
+  const Pose& GetWorldToBodyFramePose() const {
+    return world_to_body_frame_pose_;
+  }
+
+ public:  // setters
+  void SetLeftFrame(const FramePtr& left_frame) { left_frame_ = left_frame; }
+  void SetRightFrame(const FramePtr& right_frame) {
+    right_frame_ = right_frame;
+  }
+  void SetWorldToBodyFramePose(const Pose& world_to_body_frame_pose) {
+    world_to_body_frame_pose_ = world_to_body_frame_pose;
+  }
 
  private:
   int id_;
+  double timestamp_;
   FramePtr left_frame_{nullptr};
   FramePtr right_frame_{nullptr};
   Pose world_to_body_frame_pose_;
@@ -127,10 +172,10 @@ class BodyFrame {
 
 class Landmark {
  public:
-  static int id_counter_;
+  inline static int id_counter_{0};
 
  public:  // getters
-  const int GetId() const { return id_; }
+  int GetId() const { return id_; }
   const Point& GetWorldPoint() const { return world_point_; }
   const std::unordered_set<FramePtr>& GetRelatedFrameSet() const {
     return related_frame_set_;
@@ -147,10 +192,6 @@ class Landmark {
   Point world_point_;  // world point
   std::unordered_set<FramePtr> related_frame_set_;
 };
-
-int Frame::id_counter_{0};
-int BodyFrame::id_counter_{0};
-int Landmark::id_counter_{0};
 
 }  // namespace visual_odometry
 

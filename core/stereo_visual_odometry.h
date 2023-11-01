@@ -8,6 +8,8 @@
 
 #include "opencv4/opencv2/core.hpp"
 
+#include "core/types.h"
+
 namespace visual_odometry {
 
 class StereoVisualOdometry {
