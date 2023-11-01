@@ -14,12 +14,12 @@
 
 namespace visual_odometry {
 
-using Pose = Eigen::Isometry3f;
-using Point = Eigen::Vector3f;
-using Pixel = Eigen::Vector2f;
-using Position = Eigen::Vector3f;
-using Rotation = Eigen::Matrix3f;
-using Quaternion = Eigen::Quaternionf;
+using Pose = Eigen::Transform<float, 3, 1>;
+using Point = Eigen::Matrix<float, 3, 1>;
+using Pixel = Eigen::Matrix<float, 2, 1>;
+using Position = Eigen::Matrix<float, 3, 1>;
+using Rotation = Eigen::Matrix<float, 3, 3>;
+using Quaternion = Eigen::Quaternion<float>;
 using Descriptor = std::vector<uint8_t>;
 
 class Camera;
