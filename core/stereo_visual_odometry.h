@@ -1,5 +1,6 @@
 /*
-Copyright 2023 Changhyeon Kim
+  Copyright 2023 Changhyeon Kim
+  e-mail: hyun91015@gmail.com
 */
 
 #ifndef CORE_STEREO_VISUAL_ODOMETRY_H_
