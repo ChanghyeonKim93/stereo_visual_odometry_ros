@@ -53,9 +53,9 @@ class PoseOnlyOptimizer {
                                 Summary* summary = nullptr) = 0;
 
  public:
-  virtual void AddPointFeatureObservation(
-      const CameraId related_camera_id, const Point& query_world_point,
-      const Feature& matched_point_feature) = 0;
+  virtual void AddFeatureObservation(const CameraId related_camera_id,
+                                     const Point& query_world_point,
+                                     const Feature& matched_point_feature) = 0;
 };
 
 }  // namespace optimization
