@@ -1,10 +1,25 @@
-/*
-  Copyright 2023 Changhyeon Kim
-  e-mail: hyun91015@gmail.com
-*/
+/**
+ * This file is part of Stereo Visual Odometry.
+ *
+ * Copyright (C) 2023-2023 Changhyeon Kim, hyun91015@gmail.com
+ * (ChanghyeonKim93@github.com)
+ *
+ * Stereo Visual Odometry is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * Stereo Visual Odometry is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#ifndef CORE_TYPES_H_
-#define CORE_TYPES_H_
+#ifndef VISUAL_ODOMETRY_TYPES_H_
+#define VISUAL_ODOMETRY_TYPES_H_
 
 #include <memory>
 #include <unordered_set>
@@ -35,8 +50,8 @@ using LandmarkPtr = std::shared_ptr<Landmark>;
 struct Feature {
   Pixel pixel{Pixel::Zero()};
   Descriptor descriptor{};
-  int scale_level{0};
-  float feature_angle{0.0f};
+  int octave{0};
+  float angle{0.0f};
 };
 
 class Camera {
@@ -109,14 +124,16 @@ class Frame {
   inline static int id_counter_{0};
 
  public:
-  explicit Frame(const BodyFramePtr& parent_body_frame,
+  explicit Frame(const BodyFramePtr& parent_body_frame_ptr,
                  const CameraPtr& related_camera_ptr)
       : id_(id_counter_++),
-        parent_body_frame_(parent_body_frame),
+        parent_body_frame_ptr_(parent_body_frame_ptr),
         related_camera_ptr_(related_camera_ptr) {}
 
  public:  // getters
-  const BodyFramePtr& GetParentBodyFrame() const { return parent_body_frame_; }
+  const BodyFramePtr& GetParentBodyFrame() const {
+    return parent_body_frame_ptr_;
+  }
   const CameraPtr& GetRelatedCamera() const { return related_camera_ptr_; }
   const std::unordered_set<LandmarkPtr>& GetObservedLandmarkSet() const {
     return observed_landmark_set_;
@@ -129,7 +146,7 @@ class Frame {
 
  private:
   int id_;
-  BodyFramePtr parent_body_frame_{nullptr};
+  BodyFramePtr parent_body_frame_ptr_{nullptr};
   CameraPtr related_camera_ptr_{nullptr};
   std::unordered_set<LandmarkPtr> observed_landmark_set_;
 };
@@ -195,4 +212,4 @@ class Landmark {
 
 }  // namespace visual_odometry
 
-#endif  // CORE_TYPES_H_
+#endif  // VISUAL_ODOMETRY_TYPES_H_
