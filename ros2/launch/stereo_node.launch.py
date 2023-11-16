@@ -6,8 +6,8 @@ from launch_ros.actions import Node
 def generate_launch_description():
   ld = LaunchDescription()
   stereo_visual_odometry_node = Node(
-    package='stereo_visual_odometry_ros',
-    executable='stereo_node',
+    package='stereo_visual_odometry',
+    executable='stereo_visual_odometry_node',
     output='screen',
     parameters=[
         {'topicname_image_left': '/camera/infra1/image_rect_raw'},
