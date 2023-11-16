@@ -18,8 +18,8 @@
  * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VISUAL_ODOMETRY_OPTIMIZATION_SUMMARY_H_
-#define VISUAL_ODOMETRY_OPTIMIZATION_SUMMARY_H_
+#ifndef CORE_OPTIMIZATION_SUMMARY_H_
+#define CORE_OPTIMIZATION_SUMMARY_H_
 
 #include <string>
 #include <vector>
@@ -75,4 +75,4 @@ class OptimizationSummary {
 }  // namespace optimization
 }  // namespace visual_odometry
 
-#endif  // VISUAL_ODOMETRY_OPTIMIZATION_SUMMARY_H_
+#endif  // CORE_OPTIMIZATION_SUMMARY_H_

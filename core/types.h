@@ -18,8 +18,8 @@
  * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VISUAL_ODOMETRY_TYPES_H_
-#define VISUAL_ODOMETRY_TYPES_H_
+#ifndef CORE_TYPES_H_
+#define CORE_TYPES_H_
 
 #include <memory>
 #include <unordered_set>
@@ -212,4 +212,4 @@ class Landmark {
 
 }  // namespace visual_odometry
 
-#endif  // VISUAL_ODOMETRY_TYPES_H_
+#endif  // CORE_TYPES_H_

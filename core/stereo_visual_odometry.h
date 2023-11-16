@@ -18,8 +18,8 @@
  * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VISUAL_ODOMETRY_STEREO_VISUAL_ODOMETRY_H_
-#define VISUAL_ODOMETRY_STEREO_VISUAL_ODOMETRY_H_
+#ifndef CORE_STEREO_VISUAL_ODOMETRY_H_
+#define CORE_STEREO_VISUAL_ODOMETRY_H_
 
 #include "opencv4/opencv2/core.hpp"
 
@@ -37,4 +37,4 @@ class StereoVisualOdometry {
 
 }  // namespace visual_odometry
 
-#endif  // VISUAL_ODOMETRY_STEREO_VISUAL_ODOMETRY_H_
+#endif  // CORE_STEREO_VISUAL_ODOMETRY_H_

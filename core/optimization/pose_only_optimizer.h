@@ -18,8 +18,8 @@
  * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VISUAL_ODOMETRY_OPTIMIZATION_POSE_ONLY_OPTIMIZER_H_
-#define VISUAL_ODOMETRY_OPTIMIZATION_POSE_ONLY_OPTIMIZER_H_
+#ifndef CORE_OPTIMIZATION_POSE_ONLY_OPTIMIZER_H_
+#define CORE_OPTIMIZATION_POSE_ONLY_OPTIMIZER_H_
 
 #include <iostream>
 
@@ -27,7 +27,7 @@
 
 #include "core/optimization/options.h"
 #include "core/optimization/summary.h"
-#include "types.h"
+#include "core/types.h"
 
 namespace visual_odometry {
 namespace optimization {
@@ -61,4 +61,4 @@ class PoseOnlyOptimizer {
 }  // namespace optimization
 }  // namespace visual_odometry
 
-#endif  // VISUAL_ODOMETRY_OPTIMIZATION_POSE_ONLY_OPTIMIZER_H_
+#endif  // CORE_OPTIMIZATION_POSE_ONLY_OPTIMIZER_H_
