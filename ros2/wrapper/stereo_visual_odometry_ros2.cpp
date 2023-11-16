@@ -67,7 +67,6 @@ bool StereoVisualOdometryRos2::LoadConfigurationFiles() {
 
     auto right_camera_params = config["camera"]["right"];
     std::cerr << left_camera_params["fx"].as<double>() << std::endl;
-
   } catch (const YAML::BadFile& e) {
     throw std::runtime_error("BadFile: " + e.msg);
   } catch (const YAML::ParserException& e) {
