@@ -3,5 +3,29 @@
 # User setting Parameters
 #--------------------------------------------------------------------------------------------
 # Parameters of feature tracker
-feature_extractor:
-  af: 1
+feature:
+  extractor:
+    num_features: 2000
+    fast_threshold: 15
+    image_pyramid:
+      num_scale_levels: 6
+      scale_factor: 0.95
+    index_cell:
+      cell_height: 20
+      cell_width: 20
+    strong_feature_selection:
+      cell_height: 20
+      cell_width: 20
+  matcher:
+    descriptor_threshold: 100
+camera:
+  left:
+    fx: 419.617919921875
+    fy: 419.617919921875
+    cx: 424.94940185546875
+    cy: 237.3017578125
+  right:
+    fx: 419.617919921875
+    fy: 419.617919921875
+    cx: 424.94940185546875
+    cy: 237.3017578125
