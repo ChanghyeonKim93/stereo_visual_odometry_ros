@@ -56,6 +56,7 @@ class StereoVisualOdometry {
       } matcher;
     } feature;
     struct {
+      double threshold_huber{1.0};
     } optimization;
   };
 

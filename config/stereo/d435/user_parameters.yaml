@@ -18,3 +18,5 @@ feature:
       cell_width: 20
   matcher:
     max_discriptor_distance: 100
+optimization:
+  threshold_huber: 1.0

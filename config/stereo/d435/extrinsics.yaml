@@ -1,25 +1,24 @@
 ---
 #--------------------------------------------------------------------------------------------
-# Camera Parameters
+# Stereo Extrinsic Parameters
 #--------------------------------------------------------------------------------------------
-extrinsic:
-  body_to_left:
-    position:
-      x: 0.0
-      y: 0.0
-      z: 0.0
-    orientation:
-      qw: 1.0
-      qx: 0.0
-      qy: 0.0
-      qz: 0.0
-  body_to_right:
-    position:
-      x: 0.05
-      y: 0.0
-      z: 0.0
-    orientation:
-      qw: 1.0
-      qx: 0.0
-      qy: 0.0
-      qz: 0.0
+body_to_left:
+  position:
+    x: 0.0 # [m]
+    y: 0.0 # [m]
+    z: 0.0 # [m]
+  orientation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0
+body_to_right:
+  position:
+    x: 0.05 # [m]
+    y: 0.0 # [m]
+    z: 0.0 # [m]
+  orientation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0

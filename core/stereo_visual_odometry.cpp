@@ -86,8 +86,8 @@ bool StereoVisualOdometry::LoadIntrinsicsAndExtrinsicsParameters(
     const std::string& extrinsic_file_path) {
   try {
     YAML::Node intrinsic_config = YAML::LoadFile(intrinsic_file_path);
+    YAML::Node extrinsic_config = YAML::LoadFile(extrinsic_file_path);
 
-    // feature
     int image_height{0};
     int image_width{0};
     double fx{0.0};
@@ -103,12 +103,49 @@ bool StereoVisualOdometry::LoadIntrinsicsAndExtrinsicsParameters(
     cx = left_params["projection"]["cx"].as<double>();
     cy = left_params["projection"]["cy"].as<double>();
 
-    Pose body_frame_to_camera_pose{Pose::Identity()};
+    const auto left_extrinsic = extrinsic_config["body_to_left"];
+    Position trans_body_to_left{Position::Zero()};
+    trans_body_to_left.x() = left_extrinsic["position"]["x"].as<double>();
+    trans_body_to_left.y() = left_extrinsic["position"]["y"].as<double>();
+    trans_body_to_left.z() = left_extrinsic["position"]["z"].as<double>();
+    Quaternion quat_body_to_left{Quaternion::Identity()};
+    quat_body_to_left.w() = left_extrinsic["orientation"]["w"].as<double>();
+    quat_body_to_left.x() = left_extrinsic["orientation"]["x"].as<double>();
+    quat_body_to_left.y() = left_extrinsic["orientation"]["y"].as<double>();
+    quat_body_to_left.z() = left_extrinsic["orientation"]["z"].as<double>();
+    Pose T_body_to_left_cam{Pose::Identity()};
+    T_body_to_left_cam.translation() = trans_body_to_left.cast<float>();
+    T_body_to_left_cam.linear() =
+        quat_body_to_left.toRotationMatrix().cast<float>();
 
     left_cam_ = std::make_shared<Camera>(image_height, image_width, fx, fy, cx,
-                                         cy, body_frame_to_camera_pose);
+                                         cy, T_body_to_left_cam);
 
-    YAML::Node extrinsic_config = YAML::LoadFile(extrinsic_file_path);
+    const auto right_params = intrinsic_config["right"];
+    image_height = right_params["image_height"].as<int>();
+    image_width = right_params["image_width"].as<int>();
+    fx = right_params["projection"]["fx"].as<double>();
+    fy = right_params["projection"]["fy"].as<double>();
+    cx = right_params["projection"]["cx"].as<double>();
+    cy = right_params["projection"]["cy"].as<double>();
+
+    const auto right_extrinsic = extrinsic_config["body_to_right"];
+    Position trans_body_to_right{Position::Zero()};
+    trans_body_to_right.x() = right_extrinsic["position"]["x"].as<double>();
+    trans_body_to_right.y() = right_extrinsic["position"]["y"].as<double>();
+    trans_body_to_right.z() = right_extrinsic["position"]["z"].as<double>();
+    Quaternion quat_body_to_right{Quaternion::Identity()};
+    quat_body_to_right.w() = right_extrinsic["orientation"]["w"].as<double>();
+    quat_body_to_right.x() = right_extrinsic["orientation"]["x"].as<double>();
+    quat_body_to_right.y() = right_extrinsic["orientation"]["y"].as<double>();
+    quat_body_to_right.z() = right_extrinsic["orientation"]["z"].as<double>();
+    Pose T_body_to_right_cam{Pose::Identity()};
+    T_body_to_right_cam.translation() = trans_body_to_right.cast<float>();
+    T_body_to_right_cam.linear() =
+        quat_body_to_right.toRotationMatrix().cast<float>();
+
+    right_cam_ = std::make_shared<Camera>(image_height, image_width, fx, fy, cx,
+                                          cy, T_body_to_right_cam);
   } catch (const YAML::BadFile& e) {
     throw std::runtime_error("BadFile: " + e.msg);
   } catch (const YAML::ParserException& e) {
@@ -170,6 +207,11 @@ bool StereoVisualOdometry::LoadUserParameters(const std::string& file_path,
     const auto matcher_params = feature_params["matcher"];
     parameters->feature.matcher.max_discriptor_distance =
         matcher_params["max_discriptor_distance"].as<int>();
+
+    // optimization
+    const auto optimization_params = config["optimization"];
+    parameters->optimization.threshold_huber =
+        optimization_params["threshold_huber"].as<double>();
   } catch (const YAML::BadFile& e) {
     throw std::runtime_error("BadFile: " + e.msg);
   } catch (const YAML::ParserException& e) {
