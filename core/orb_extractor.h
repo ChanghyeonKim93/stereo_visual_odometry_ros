@@ -21,8 +21,10 @@
 #ifndef CORE_ORB_EXTRACTOR_H_
 #define CORE_ORB_EXTRACTOR_H_
 
+#include <utility>
 #include <vector>
 
+#include "core/orb_descriptor_pattern.h"
 #include "core/types.h"
 #include "opencv4/opencv2/core.hpp"
 
@@ -32,11 +34,34 @@ class OrbExtractor {
  public:
   OrbExtractor();
 
-  std::vector<Feature> Extract(const cv::Mat& img, const int num_max_features,
-                               const int fast_threshold_high,
-                               const int fast_threshold_low);
+  std::vector<cv::Mat> ComputeImagePyramid(const cv::Mat& image,
+                                           const int num_scale_levels,
+                                           const double scale_factor);
+
+  std::vector<Feature> ExtractAndCompute(
+      const std::vector<cv::Mat>& image_pyramid, const int num_max_features,
+      const int num_scale_levels, const double scale_factor,
+      const int fast_threshold);
 
  private:
+  std::vector<int> PrecomputeUmaxList();
+  std::vector<int> ComputeNumFeaturesPerLevel(const int num_max_features,
+                                              const int num_scale_levels,
+                                              const double scale_factor);
+  std::vector<cv::KeyPoint> DistributeOctTree(
+      const std::vector<cv::KeyPoint>& keypoints_to_distribute, const int minX,
+      const int maxX, const int minY, const int maxY, const int N);
+  std::vector<Feature> ExtractFastFeatures(const cv::Mat& image_pyramid,
+                                           const int num_features,
+                                           const int level,
+                                           const double scale_factor,
+                                           const int fast_threshold);
+  std::vector<float> CalculateFeatureAngle(const cv::Mat& image,
+                                           const std::vector<Pixel>& pts);
+
+ private:
+  std::vector<int> angle_patch_u_max_list_;
+  std::vector<std::pair<Pixel, Pixel>> orb_descriptor_pattern_;
 };
 
 }  // namespace visual_odometry
