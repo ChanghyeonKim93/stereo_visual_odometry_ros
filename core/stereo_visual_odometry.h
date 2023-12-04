@@ -24,9 +24,10 @@
 #include <memory>
 #include <string>
 
-#include "opencv4/opencv2/core.hpp"
-
+#include "core/orb_extractor.h"
 #include "core/types.h"
+
+#include "opencv4/opencv2/core.hpp"
 
 namespace visual_odometry {
 
@@ -75,6 +76,9 @@ class StereoVisualOdometry {
  private:
   std::shared_ptr<Camera> left_cam_{nullptr};
   std::shared_ptr<Camera> right_cam_{nullptr};
+
+ private:
+  std::unique_ptr<OrbExtractor> orb_extractor_{nullptr};
 };
 
 }  // namespace visual_odometry

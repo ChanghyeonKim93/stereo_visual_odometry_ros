@@ -18,25 +18,34 @@
  * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CORE_UTILITY_RECONSTRUCTOR_H_
-#define CORE_UTILITY_RECONSTRUCTOR_H_
-
 #include <vector>
 
-#include "core/types.h"
+#include "core/utility/reconstructor.h"
 
 namespace visual_odometry {
 
-class Reconstructor {
- public:
-  static Point ReconstructDLT(const Pixel& pt0, const Pixel& pt1,
-                              const Pose& pose0, const Pose& pose1);
-  static std::vector<Point> ReconstructDLT(const std::vector<Pixel>& pts0,
-                                           const std::vector<Pixel>& pts1,
-                                           const Pose& pose0,
-                                           const Pose& pose1);
-};
+Point Reconstructor::ReconstructDLT(const Pixel& pt0, const Pixel& pt1,
+                                    const Pose& pose0, const Pose& pose1) {
+  Point world_point{Point::Zero()};
+
+  return world_point;
+}
+
+std::vector<Point> Reconstructor::ReconstructDLT(const std::vector<Pixel>& pts0,
+                                                 const std::vector<Pixel>& pts1,
+                                                 const Pose& pose0,
+                                                 const Pose& pose1) {
+  if (pts0.size() != pts1.size())
+    throw std::runtime_error("pts0.size() != pts1.size()");
+
+  const size_t n_pts = pts0.size();
+  std::vector<Point> world_points(n_pts);
+  for (size_t index = 0; index < n_pts; ++index) {
+    // TODO(ChanghyeonKim): implement DLT
+    world_points[index].setZero();
+  }
+
+  return world_points;
+}
 
 }  // namespace visual_odometry
-
-#endif  // CORE_UTILITY_RECONSTRUCTOR_H_

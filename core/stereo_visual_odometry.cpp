@@ -68,6 +68,9 @@ StereoVisualOdometry::StereoVisualOdometry() {
   else
     PrintMessage(
         "Loading intrinsic and extrinsic parameters is successfully done!");
+
+  // Initialize orb extractor
+  orb_extractor_ = std::make_unique<OrbExtractor>();
 }
 
 bool StereoVisualOdometry::TrackStereoImages(const double timestamp,

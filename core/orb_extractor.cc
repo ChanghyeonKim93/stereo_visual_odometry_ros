@@ -18,25 +18,28 @@
  * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CORE_UTILITY_RECONSTRUCTOR_H_
-#define CORE_UTILITY_RECONSTRUCTOR_H_
+#include "core/orb_extractor.h"
 
 #include <vector>
 
 #include "core/types.h"
+#include "opencv4/opencv2/core.hpp"
 
 namespace visual_odometry {
 
-class Reconstructor {
- public:
-  static Point ReconstructDLT(const Pixel& pt0, const Pixel& pt1,
-                              const Pose& pose0, const Pose& pose1);
-  static std::vector<Point> ReconstructDLT(const std::vector<Pixel>& pts0,
-                                           const std::vector<Pixel>& pts1,
-                                           const Pose& pose0,
-                                           const Pose& pose1);
-};
+OrbExtractor::OrbExtractor() {}
+
+std::vector<Feature> OrbExtractor::Extract(const cv::Mat& img,
+                                           const int num_max_features,
+                                           const int fast_threshold_high,
+                                           const int fast_threshold_low) {
+  std::vector<Feature> features;
+  (void)img;
+  (void)num_max_features;
+  (void)fast_threshold_high;
+  (void)fast_threshold_low;
+
+  return features;
+}
 
 }  // namespace visual_odometry
-
-#endif  // CORE_UTILITY_RECONSTRUCTOR_H_
