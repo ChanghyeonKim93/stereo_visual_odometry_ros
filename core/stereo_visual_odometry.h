@@ -29,10 +29,48 @@ namespace visual_odometry {
 
 class StereoVisualOdometry {
  public:
+  struct Parameters {
+    struct {
+      struct {
+        int cell_height{10};
+        int cell_width{10};
+      } index_grid;
+      struct {
+        int num_scale_levels{8};
+        double scale_factor{1.2};
+      } image_pyramid;
+      struct {
+        int num_features{2000};
+        int fast_threshold_high{20};
+        int fast_threshold_low{7};
+        struct {
+          int cell_height{20};
+          int cell_width{20};
+        } feature_selection;
+      } extractor;
+      struct {
+        int max_discriptor_distance{100};
+      } matcher;
+    } feature;
+    struct {
+    } optimization;
+  };
+
+ public:
   StereoVisualOdometry();
+
+  bool LoadIntrinsicsAndExtrinsicsParameters(
+      const std::string& intrinsic_file_path,
+      const std::string& extrinsic_file_path);
+  bool LoadUserParameters(const std::string& file_path,
+                          StereoVisualOdometry::Parameters* parameters);
 
   bool TrackStereoImages(const double timestamp, const cv::Mat& left_image,
                          const cv::Mat& right_image);
+
+ private:
+  std::shared_ptr<Camera> left_cam_{nullptr};
+  std::shared_ptr<Camera> right_cam_{nullptr};
 };
 
 }  // namespace visual_odometry

@@ -22,6 +22,7 @@
 #define CORE_TYPES_H_
 
 #include <memory>
+#include <set>
 #include <unordered_set>
 #include <vector>
 
@@ -194,7 +195,7 @@ class Landmark {
  public:  // getters
   int GetId() const { return id_; }
   const Point& GetWorldPoint() const { return world_point_; }
-  const std::unordered_set<FramePtr>& GetRelatedFrameSet() const {
+  const std::set<FramePtr>& GetRelatedFramePtrs() const {
     return related_frame_set_;
   }
 
@@ -207,7 +208,7 @@ class Landmark {
  private:
   int id_;
   Point world_point_;  // world point
-  std::unordered_set<FramePtr> related_frame_set_;
+  std::set<FramePtr> related_frame_set_;
 };
 
 }  // namespace visual_odometry

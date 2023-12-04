@@ -33,13 +33,7 @@ namespace visual_odometry {
 
 StereoVisualOdometryRos2::StereoVisualOdometryRos2(const std::string& node_name)
     : Node(node_name) {
-  std::cerr << "Start\n";
-  if (!LoadConfigurationFiles())
-    throw std::runtime_error("Load configuration is failed.");
-  else
-    std::cerr << "Load configuration OK!\n";
-
-  stereo_visual_odometry_ = std::make_unique<StereoVisualOdometry>();
+  stereo_vo_ = std::make_unique<StereoVisualOdometry>();
 
   // Subscribers
   subscriber_left_image_.subscribe(this, topic_names.subscribe.left_image);
@@ -53,28 +47,6 @@ StereoVisualOdometryRos2::StereoVisualOdometryRos2(const std::string& node_name)
 }
 
 StereoVisualOdometryRos2::~StereoVisualOdometryRos2() {}
-
-bool StereoVisualOdometryRos2::LoadConfigurationFiles() {
-  try {
-    YAML::Node config = YAML::LoadFile(
-        "/home/kch/ros2_ws/src/stereo_visual_odometry_ros2/config/"
-        "user_parameter2.yaml");
-
-    auto feature_extractor_params = config["feature_extractor"];
-
-    auto left_camera_params = config["camera"]["left"];
-    std::cerr << left_camera_params["fx"].as<double>() << std::endl;
-
-    auto right_camera_params = config["camera"]["right"];
-    std::cerr << left_camera_params["fx"].as<double>() << std::endl;
-  } catch (const YAML::BadFile& e) {
-    throw std::runtime_error("BadFile: " + e.msg);
-  } catch (const YAML::ParserException& e) {
-    throw std::runtime_error("ParserException: " + e.msg);
-  }
-
-  return true;
-}
 
 void StereoVisualOdometryRos2::CallbackMessagesForStereoImages(
     const sensor_msgs::msg::Image::ConstSharedPtr& msg_left,

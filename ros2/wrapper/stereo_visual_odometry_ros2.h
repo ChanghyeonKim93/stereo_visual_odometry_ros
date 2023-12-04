@@ -43,7 +43,6 @@ class StereoVisualOdometryRos2 : public rclcpp::Node {
   ~StereoVisualOdometryRos2();
 
  private:
-  bool LoadConfigurationFiles();
   void CallbackMessagesForStereoImages(
       const sensor_msgs::msg::Image::ConstSharedPtr& msg_left,
       const sensor_msgs::msg::Image::ConstSharedPtr& msg_right);
@@ -60,7 +59,7 @@ class StereoVisualOdometryRos2 : public rclcpp::Node {
     } publish;
   } topic_names;
 
-  std::unique_ptr<StereoVisualOdometry> stereo_visual_odometry_;
+  std::unique_ptr<StereoVisualOdometry> stereo_vo_;
 
   message_filters::Subscriber<ImageMsg> subscriber_left_image_;
   message_filters::Subscriber<ImageMsg> subscriber_right_image_;
