@@ -1,0 +1,22 @@
+---
+#--------------------------------------------------------------------------------------------
+# User setting Parameters
+#--------------------------------------------------------------------------------------------
+feature:
+  index_grid:
+    cell_height: 20
+    cell_width: 20
+  image_pyramid:
+    num_scale_levels: 8
+    scale_factor: 1.2
+  extractor:
+    num_features: 2000
+    fast_threshold_high: 20
+    fast_threshold_low: 7
+    feature_selection:
+      cell_height: 20
+      cell_width: 20
+  matcher:
+    max_discriptor_distance: 100
+optimization:
+  threshold_huber: 1.0

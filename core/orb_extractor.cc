@@ -18,26 +18,28 @@
  * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <exception>
-#include <iostream>
-#include <memory>
-#include <string>
+#include "core/orb_extractor.h"
 
-#include "rclcpp/rclcpp.hpp"
+#include <vector>
 
-#include "ros2/wrapper/stereo_visual_odometry_ros2.h"
+#include "core/types.h"
+#include "opencv4/opencv2/core.hpp"
 
-#define NODE_NAME "stereo_visual_odometry_node"
+namespace visual_odometry {
 
-int main(int argc, char* argv[]) {
-  rclcpp::init(argc, argv);
-  try {
-    rclcpp::spin(
-        std::make_shared<visual_odometry::StereoVisualOdometryRos2>(NODE_NAME));
-    rclcpp::shutdown();
-  } catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
-  }
+OrbExtractor::OrbExtractor() {}
 
-  return 0;
+std::vector<Feature> OrbExtractor::Extract(const cv::Mat& img,
+                                           const int num_max_features,
+                                           const int fast_threshold_high,
+                                           const int fast_threshold_low) {
+  std::vector<Feature> features;
+  (void)img;
+  (void)num_max_features;
+  (void)fast_threshold_high;
+  (void)fast_threshold_low;
+
+  return features;
 }
+
+}  // namespace visual_odometry

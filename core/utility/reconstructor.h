@@ -18,26 +18,25 @@
  * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <exception>
-#include <iostream>
-#include <memory>
-#include <string>
+#ifndef CORE_UTILITY_RECONSTRUCTOR_H_
+#define CORE_UTILITY_RECONSTRUCTOR_H_
 
-#include "rclcpp/rclcpp.hpp"
+#include <vector>
 
-#include "ros2/wrapper/stereo_visual_odometry_ros2.h"
+#include "core/types.h"
 
-#define NODE_NAME "stereo_visual_odometry_node"
+namespace visual_odometry {
 
-int main(int argc, char* argv[]) {
-  rclcpp::init(argc, argv);
-  try {
-    rclcpp::spin(
-        std::make_shared<visual_odometry::StereoVisualOdometryRos2>(NODE_NAME));
-    rclcpp::shutdown();
-  } catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
-  }
+class Reconstructor {
+ public:
+  static Point ReconstructDLT(const Pixel& pt0, const Pixel& pt1,
+                              const Pose& pose0, const Pose& pose1);
+  static std::vector<Point> ReconstructDLT(const std::vector<Pixel>& pts0,
+                                           const std::vector<Pixel>& pts1,
+                                           const Pose& pose0,
+                                           const Pose& pose1);
+};
 
-  return 0;
-}
+}  // namespace visual_odometry
+
+#endif  // CORE_UTILITY_RECONSTRUCTOR_H_

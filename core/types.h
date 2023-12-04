@@ -1,24 +1,42 @@
-/*
-  Copyright 2023 Changhyeon Kim
-  e-mail: hyun91015@gmail.com
-*/
+/**
+ * This file is part of Stereo Visual Odometry.
+ *
+ * Copyright (C) 2023-2023 Changhyeon Kim, hyun91015@gmail.com
+ * (ChanghyeonKim93@github.com)
+ *
+ * Stereo Visual Odometry is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * Stereo Visual Odometry is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef CORE_TYPES_H_
 #define CORE_TYPES_H_
 
 #include <memory>
+#include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "eigen3/Eigen/Dense"
 
 namespace visual_odometry {
 
-using Pose = Eigen::Isometry3f;
-using Point = Eigen::Vector3f;
-using Pixel = Eigen::Vector2f;
-using Position = Eigen::Vector3f;
-using Rotation = Eigen::Matrix3f;
-using Quaternion = Eigen::Quaternionf;
+using Pose = Eigen::Transform<float, 3, 1>;
+using Point = Eigen::Matrix<float, 3, 1>;
+using Pixel = Eigen::Matrix<float, 2, 1>;
+using Position = Eigen::Matrix<float, 3, 1>;
+using Rotation = Eigen::Matrix<float, 3, 3>;
+using Quaternion = Eigen::Quaternion<float>;
+using Descriptor = std::vector<uint8_t>;
 
 class Camera;
 class Frame;
@@ -29,6 +47,13 @@ using CameraPtr = std::shared_ptr<Camera>;
 using FramePtr = std::shared_ptr<Frame>;
 using BodyFramePtr = std::shared_ptr<BodyFrame>;
 using LandmarkPtr = std::shared_ptr<Landmark>;
+
+struct Feature {
+  Pixel pixel{Pixel::Zero()};
+  Descriptor descriptor{};
+  int octave{0};
+  float angle{0.0f};
+};
 
 class Camera {
  public:
@@ -73,14 +98,14 @@ class Camera {
         T_c2b_(rhs.T_c2b_) {}
 
  public:  // Getters
-  const int GetImageHeight() const { return image_height_; }
-  const int GetImageWidth() const { return image_width_; }
-  const float GetFx() const { return fx_; }
-  const float GetFy() const { return fy_; }
-  const float GetCx() const { return cx_; }
-  const float GetCy() const { return cy_; }
-  const float GetInverseFx() const { return inv_fx_; }
-  const float GetInverseFx() const { return inv_fy_; }
+  int GetImageHeight() const { return image_height_; }
+  int GetImageWidth() const { return image_width_; }
+  float GetFx() const { return fx_; }
+  float GetFy() const { return fy_; }
+  float GetCx() const { return cx_; }
+  float GetCy() const { return cy_; }
+  float GetInverseFx() const { return inv_fx_; }
+  float GetInverseFy() const { return inv_fy_; }
 
  private:
   int image_height_;
@@ -96,22 +121,94 @@ class Camera {
 };
 
 class Frame {
+ public:
+  inline static int id_counter_{0};
+
+ public:
+  explicit Frame(const BodyFramePtr& parent_body_frame_ptr,
+                 const CameraPtr& related_camera_ptr)
+      : id_(id_counter_++),
+        parent_body_frame_ptr_(parent_body_frame_ptr),
+        related_camera_ptr_(related_camera_ptr) {}
+
+ public:  // getters
+  const BodyFramePtr& GetParentBodyFrame() const {
+    return parent_body_frame_ptr_;
+  }
+  const CameraPtr& GetRelatedCamera() const { return related_camera_ptr_; }
+  const std::unordered_set<LandmarkPtr>& GetObservedLandmarkSet() const {
+    return observed_landmark_set_;
+  }
+
+ public:  // setters
+  void AddObservedLandmark(const LandmarkPtr& landmark) {
+    observed_landmark_set_.insert(landmark);
+  }
+
  private:
   int id_;
+  BodyFramePtr parent_body_frame_ptr_{nullptr};
   CameraPtr related_camera_ptr_{nullptr};
+  std::unordered_set<LandmarkPtr> observed_landmark_set_;
 };
 
 class BodyFrame {
+ public:
+  inline static int id_counter_{0};
+  explicit BodyFrame(const double timestamp)
+      : id_(id_counter_++),
+        timestamp_(timestamp),
+        left_frame_(nullptr),
+        right_frame_(nullptr),
+        world_to_body_frame_pose_(Pose::Identity()) {}
+
+ public:  // getters
+  int GetId() const { return id_; }
+  double GetTimestamp() const { return timestamp_; }
+  const FramePtr& GetLeftFrame() const { return left_frame_; }
+  const FramePtr& GetRightFrame() const { return right_frame_; }
+  const Pose& GetWorldToBodyFramePose() const {
+    return world_to_body_frame_pose_;
+  }
+
+ public:  // setters
+  void SetLeftFrame(const FramePtr& left_frame) { left_frame_ = left_frame; }
+  void SetRightFrame(const FramePtr& right_frame) {
+    right_frame_ = right_frame;
+  }
+  void SetWorldToBodyFramePose(const Pose& world_to_body_frame_pose) {
+    world_to_body_frame_pose_ = world_to_body_frame_pose;
+  }
+
  private:
   int id_;
+  double timestamp_;
   FramePtr left_frame_{nullptr};
   FramePtr right_frame_{nullptr};
+  Pose world_to_body_frame_pose_;
 };
 
 class Landmark {
+ public:
+  inline static int id_counter_{0};
+
+ public:  // getters
+  int GetId() const { return id_; }
+  const Point& GetWorldPoint() const { return world_point_; }
+  const std::set<FramePtr>& GetRelatedFramePtrs() const {
+    return related_frame_set_;
+  }
+
+ public:  // setters
+  void AddRelatedFrame(const FramePtr& frame) {
+    related_frame_set_.insert(frame);
+  }
+  void SetWorldPoint(const Point& world_point) { world_point_ = world_point; }
+
  private:
   int id_;
-  std::vector<FramePtr> related_frame_list_;
+  Point world_point_;  // world point
+  std::set<FramePtr> related_frame_set_;
 };
 
 }  // namespace visual_odometry

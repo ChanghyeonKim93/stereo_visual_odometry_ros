@@ -1,7 +1,22 @@
-/*
-  Copyright 2023 Changhyeon Kim
-  e-mail: hyun91015@gmail.com
-*/
+/**
+ * This file is part of Stereo Visual Odometry.
+ *
+ * Copyright (C) 2023-2023 Changhyeon Kim, hyun91015@gmail.com
+ * (ChanghyeonKim93@github.com)
+ *
+ * Stereo Visual Odometry is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * Stereo Visual Odometry is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * Stereo Visual Odometry. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <iostream>
 #include <memory>
@@ -18,11 +33,7 @@ namespace visual_odometry {
 
 StereoVisualOdometryRos2::StereoVisualOdometryRos2(const std::string& node_name)
     : Node(node_name) {
-  std::cerr << "Start\n";
-  if (!LoadConfigurationFiles())
-    throw std::runtime_error("Load configuration is failed.");
-
-  stereo_visual_odometry_ = std::make_unique<StereoVisualOdometry>();
+  stereo_vo_ = std::make_unique<StereoVisualOdometry>();
 
   // Subscribers
   subscriber_left_image_.subscribe(this, topic_names.subscribe.left_image);
@@ -36,21 +47,6 @@ StereoVisualOdometryRos2::StereoVisualOdometryRos2(const std::string& node_name)
 }
 
 StereoVisualOdometryRos2::~StereoVisualOdometryRos2() {}
-
-bool StereoVisualOdometryRos2::LoadConfigurationFiles() {
-  YAML::Node config = YAML::LoadFile(
-      "/home/kch/ros2_ws/src/stereo_visual_odometry_ros/config/"
-      "user_parameter2.yaml");
-
-  if (config["feature_extractor.af"]) {
-    std::cerr << "Last logged in: " << config["feature_extractor.af"].as<int>()
-              << "\n";
-  } else {
-    return false;
-  }
-
-  return true;
-}
 
 void StereoVisualOdometryRos2::CallbackMessagesForStereoImages(
     const sensor_msgs::msg::Image::ConstSharedPtr& msg_left,
