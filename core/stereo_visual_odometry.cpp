@@ -109,7 +109,6 @@ bool StereoVisualOdometry::LoadIntrinsicsAndExtrinsicsParameters(
                                          cy, body_frame_to_camera_pose);
 
     YAML::Node extrinsic_config = YAML::LoadFile(extrinsic_file_path);
-
   } catch (const YAML::BadFile& e) {
     throw std::runtime_error("BadFile: " + e.msg);
   } catch (const YAML::ParserException& e) {
@@ -171,7 +170,6 @@ bool StereoVisualOdometry::LoadUserParameters(const std::string& file_path,
     const auto matcher_params = feature_params["matcher"];
     parameters->feature.matcher.max_discriptor_distance =
         matcher_params["max_discriptor_distance"].as<int>();
-
   } catch (const YAML::BadFile& e) {
     throw std::runtime_error("BadFile: " + e.msg);
   } catch (const YAML::ParserException& e) {

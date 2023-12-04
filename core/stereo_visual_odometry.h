@@ -21,6 +21,9 @@
 #ifndef CORE_STEREO_VISUAL_ODOMETRY_H_
 #define CORE_STEREO_VISUAL_ODOMETRY_H_
 
+#include <memory>
+#include <string>
+
 #include "opencv4/opencv2/core.hpp"
 
 #include "core/types.h"
