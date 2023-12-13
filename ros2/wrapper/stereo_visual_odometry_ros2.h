@@ -50,12 +50,12 @@ class StereoVisualOdometryRos2 : public rclcpp::Node {
  private:
   struct {
     struct {
-      std::string left_image{""};
-      std::string right_image{""};
+      std::string left_image{"/camera/infra1/image_rect_raw"};
+      std::string right_image{"/camera/infra1/image_rect_raw"};
     } subscribe;
     struct {
-      std::string pose{""};
-      std::string trajectory{""};
+      std::string pose{"/stereo_visual_odometry/pose"};
+      std::string trajectory{"/stereo_visual_odometry/trajectory"};
     } publish;
   } topic_names;
 

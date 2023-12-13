@@ -41,23 +41,25 @@ class OrbExtractor {
   std::vector<Feature> ExtractAndCompute(
       const std::vector<cv::Mat>& image_pyramid, const int num_max_features,
       const int num_scale_levels, const double scale_factor,
-      const int fast_threshold);
+      const int fast_threshold_high, const int fast_threshold_low);
 
  private:
   std::vector<int> PrecomputeUmaxList();
   std::vector<int> ComputeNumFeaturesPerLevel(const int num_max_features,
                                               const int num_scale_levels,
                                               const double scale_factor);
-  std::vector<cv::KeyPoint> DistributeOctTree(
+  std::vector<cv::KeyPoint> DistributeFeaturesByOctTree(
       const std::vector<cv::KeyPoint>& keypoints_to_distribute, const int minX,
-      const int maxX, const int minY, const int maxY, const int N);
+      const int maxX, const int minY, const int maxY,
+      const int target_num_features);
   std::vector<Feature> ExtractFastFeatures(const cv::Mat& image_pyramid,
                                            const int num_features,
                                            const int level,
                                            const double scale_factor,
-                                           const int fast_threshold);
-  std::vector<float> CalculateFeatureAngle(const cv::Mat& image,
-                                           const std::vector<Pixel>& pts);
+                                           const int fast_threshold_high,
+                                           const int fast_threshold_low);
+  std::vector<float> CalculateFeatureAngle(
+      const cv::Mat& image, const std::vector<cv::KeyPoint>& keypoints);
 
  private:
   std::vector<int> angle_patch_u_max_list_;

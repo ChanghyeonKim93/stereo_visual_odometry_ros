@@ -26,6 +26,8 @@
 #include "core/stereo_visual_odometry.h"
 #include "core/types.h"
 
+#include "opencv4/opencv2/highgui.hpp"
+#include "opencv4/opencv2/imgproc.hpp"
 #include "yaml-cpp/yaml.h"
 
 void PrintMessageImpl(const std::string& message,
@@ -76,10 +78,50 @@ StereoVisualOdometry::StereoVisualOdometry() {
 bool StereoVisualOdometry::TrackStereoImages(const double timestamp,
                                              const cv::Mat& left_image,
                                              const cv::Mat& right_image) {
-  bool is_track_succeeded = true;
   (void)timestamp;
-  (void)left_image;
-  (void)right_image;
+  bool is_track_succeeded = true;
+
+  // Extract features
+  const auto& pyramid_params = parameters_.feature.image_pyramid;
+  const auto& extractor_params = parameters_.feature.extractor;
+  const auto left_image_pyramid = orb_extractor_->ComputeImagePyramid(
+      left_image, pyramid_params.num_scale_levels, pyramid_params.scale_factor);
+  const auto right_image_pyramid = orb_extractor_->ComputeImagePyramid(
+      right_image, pyramid_params.num_scale_levels,
+      pyramid_params.scale_factor);
+
+  const auto left_features = orb_extractor_->ExtractAndCompute(
+      left_image_pyramid, extractor_params.num_features,
+      pyramid_params.num_scale_levels, pyramid_params.scale_factor,
+      extractor_params.fast_threshold_high,
+      extractor_params.fast_threshold_low);
+  const auto right_features = orb_extractor_->ExtractAndCompute(
+      right_image_pyramid, extractor_params.num_features,
+      pyramid_params.num_scale_levels, pyramid_params.scale_factor,
+      extractor_params.fast_threshold_high,
+      extractor_params.fast_threshold_low);
+
+  std::string window_name{"left_image"};
+  cv::Mat left_color_image;
+  cv::cvtColor(left_image_pyramid[0], left_color_image, cv::COLOR_GRAY2BGR);
+  for (const auto& feature : left_features) {
+    cv::Point2f pt{feature.pixel.x(), feature.pixel.y()};
+    cv::drawMarker(left_color_image, pt, cv::Scalar(0, 255, 0),
+                   cv::MARKER_CROSS, 14, 1, cv::LINE_AA);
+  }
+  cv::namedWindow(window_name);
+  cv::imshow(window_name, left_color_image);
+  cv::waitKey(1);
+
+  std::cerr << "left_features: " << left_features.size() << std::endl;
+  std::cerr << "right_features: " << right_features.size() << std::endl;
+
+  for (size_t level = 0; level < left_image_pyramid.size(); ++level) {
+    std::string window_name{std::to_string(level) + "_image"};
+    cv::namedWindow(window_name);
+    cv::imshow(window_name, left_image_pyramid[level]);
+    cv::waitKey(1);
+  }
 
   return is_track_succeeded;
 }

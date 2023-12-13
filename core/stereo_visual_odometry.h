@@ -74,6 +74,8 @@ class StereoVisualOdometry {
                          const cv::Mat& right_image);
 
  private:
+  Parameters parameters_;
+
   std::shared_ptr<Camera> left_cam_{nullptr};
   std::shared_ptr<Camera> right_cam_{nullptr};
 

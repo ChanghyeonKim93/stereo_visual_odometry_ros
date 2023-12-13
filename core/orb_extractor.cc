@@ -110,9 +110,10 @@ static bool compare_nodes(const std::pair<int, OrbExtractorNode*>& e1,
   }
 }
 
-std::vector<cv::KeyPoint> OrbExtractor::DistributeOctTree(
+std::vector<cv::KeyPoint> OrbExtractor::DistributeFeaturesByOctTree(
     const std::vector<cv::KeyPoint>& keypoints_to_distribute, const int minX,
-    const int maxX, const int minY, const int maxY, const int N) {
+    const int maxX, const int minY, const int maxY,
+    const int target_num_features) {
   // Compute how many initial nodes
   const int num_initial_nodes =
       std::round(static_cast<double>(maxX - minX) / (maxY - minY));
@@ -137,9 +138,9 @@ std::vector<cv::KeyPoint> OrbExtractor::DistributeOctTree(
 
   // Associate points to childs
   for (size_t index = 0; index < keypoints_to_distribute.size(); index++) {
-    const auto& kpts = keypoints_to_distribute[index];
-    initial_node_ptr_list[kpts.pt.x * inverse_initial_node_width]
-        ->keypoints.push_back(kpts);
+    const auto& kpt = keypoints_to_distribute[index];
+    initial_node_ptr_list[kpt.pt.x * inverse_initial_node_width]
+        ->keypoints.push_back(kpt);
   }
 
   std::list<OrbExtractorNode>::iterator node_list_itr = node_list.begin();
@@ -162,7 +163,7 @@ std::vector<cv::KeyPoint> OrbExtractor::DistributeOctTree(
   while (!flag_finished) {
     iteration++;
 
-    int prevSize = node_list.size();
+    int prev_size = node_list.size();
     int num_nodes_to_expand = 0;
     vSizeAndPointerToNode.clear();
     node_list_itr = node_list.begin();
@@ -221,13 +222,13 @@ std::vector<cv::KeyPoint> OrbExtractor::DistributeOctTree(
 
     // Finish if there are more nodes than required features
     // or all nodes contain just one point
-    if (static_cast<int>(node_list.size()) >= N ||
-        static_cast<int>(node_list.size()) == prevSize) {
+    if (static_cast<int>(node_list.size()) >= target_num_features ||
+        static_cast<int>(node_list.size()) == prev_size) {
       flag_finished = true;
     } else if ((static_cast<int>(node_list.size()) + num_nodes_to_expand * 3) >
-               N) {
+               target_num_features) {
       while (!flag_finished) {
-        prevSize = node_list.size();
+        prev_size = node_list.size();
 
         std::vector<std::pair<int, OrbExtractorNode*>>
             vPrevSizeAndPointerToNode = vSizeAndPointerToNode;
@@ -276,11 +277,11 @@ std::vector<cv::KeyPoint> OrbExtractor::DistributeOctTree(
           node_list.erase(
               vPrevSizeAndPointerToNode[j].second->node_list_iterator);
 
-          if (static_cast<int>(node_list.size()) >= N) break;
+          if (static_cast<int>(node_list.size()) >= target_num_features) break;
         }
 
-        if (static_cast<int>(node_list.size()) >= N ||
-            static_cast<int>(node_list.size()) == prevSize)
+        if (static_cast<int>(node_list.size()) >= target_num_features ||
+            static_cast<int>(node_list.size()) == prev_size)
           flag_finished = true;
       }
     }
@@ -312,40 +313,26 @@ OrbExtractor::OrbExtractor() { angle_patch_u_max_list_ = PrecomputeUmaxList(); }
 std::vector<cv::Mat> OrbExtractor::ComputeImagePyramid(
     const cv::Mat& image, const int num_scale_levels,
     const double scale_factor) {
-  static constexpr int kEdgeThreshold{19};
+  const double inverse_scale_factor = 1.0 / scale_factor;
 
   std::vector<cv::Mat> image_pyramid(num_scale_levels);
 
-  std::vector<double> inverse_scale_factor_list(num_scale_levels);
-  inverse_scale_factor_list[0] = 1.0 / scale_factor;
+  std::vector<double> inverse_scale_list(num_scale_levels);
+  inverse_scale_list[0] = 1.0;
   for (int level = 1; level < num_scale_levels; ++level)
-    inverse_scale_factor_list[level] =
-        inverse_scale_factor_list[level - 1] / scale_factor;
+    inverse_scale_list[level] =
+        inverse_scale_list[level - 1] * inverse_scale_factor;
 
   const int image_height = image.rows;
   const int image_width = image.cols;
 
-  for (int level = 0; level < num_scale_levels; ++level) {
-    const double inverse_scale = inverse_scale_factor_list[level];
-    cv::Size image_size(std::round(image_width * inverse_scale),
-                        std::round(image_height * inverse_scale));
-    cv::Size wholeSize(image_size.width + kEdgeThreshold * 2,
-                       image_size.height + kEdgeThreshold * 2);
-    cv::Mat temp(wholeSize, image.type()), masktemp;
-    image_pyramid[level] = temp(cv::Rect(kEdgeThreshold, kEdgeThreshold,
-                                         image_size.width, image_size.height));
-    // Compute the resized image
-    if (level != 0) {
-      cv::resize(image_pyramid[level - 1], image_pyramid[level], image_size, 0,
-                 0, cv::INTER_LINEAR);
-      cv::copyMakeBorder(image_pyramid[level], temp, kEdgeThreshold,
-                         kEdgeThreshold, kEdgeThreshold, kEdgeThreshold,
-                         cv::BORDER_REFLECT_101 + cv::BORDER_ISOLATED);
-    } else {
-      cv::copyMakeBorder(image, temp, kEdgeThreshold, kEdgeThreshold,
-                         kEdgeThreshold, kEdgeThreshold,
-                         cv::BORDER_REFLECT_101);
-    }
+  image.copyTo(image_pyramid[0]);
+  for (int level = 1; level < num_scale_levels; ++level) {
+    const auto inverse_scale = inverse_scale_list[level];
+    cv::resize(image_pyramid[level - 1], image_pyramid[level],
+               cv::Size(std::round(image_width * inverse_scale),
+                        std::round(image_height * inverse_scale)),
+               0, 0, cv::INTER_LINEAR);
   }
 
   return image_pyramid;
@@ -354,18 +341,26 @@ std::vector<cv::Mat> OrbExtractor::ComputeImagePyramid(
 std::vector<Feature> OrbExtractor::ExtractAndCompute(
     const std::vector<cv::Mat>& image_pyramid, const int num_max_features,
     const int num_scale_levels, const double scale_factor,
-    const int fast_threshold) {
+    const int fast_threshold_high, const int fast_threshold_low) {
   if (static_cast<int>(image_pyramid.size()) != num_scale_levels)
     throw std::runtime_error("image_pyramid.size() != num_scale_levels");
 
   const auto num_features_per_level = ComputeNumFeaturesPerLevel(
       num_max_features, num_scale_levels, scale_factor);
 
-  std::vector<Feature> all_features;
+  static auto append_features = [](const std::vector<Feature>& features,
+                                   std::vector<Feature>* all_features) {
+    for (const auto& feature : features) (*all_features).push_back(feature);
+  };
 
-  (void)image_pyramid;
-  (void)num_max_features;
-  (void)fast_threshold;
+  std::vector<Feature> all_features;
+  all_features.reserve(num_max_features);
+  for (int level = 0; level < num_scale_levels; ++level) {
+    const auto features_of_this_level = ExtractFastFeatures(
+        image_pyramid[level], num_features_per_level[level], level,
+        scale_factor, fast_threshold_high, fast_threshold_low);
+    append_features(features_of_this_level, &all_features);
+  }
 
   return all_features;
 }
@@ -382,16 +377,12 @@ std::vector<int> OrbExtractor::PrecomputeUmaxList() {
     u_max_list[v] =
         std::round(std::sqrt(kHalfPatchSize * kHalfPatchSize - v * v));
 
-  // Make sure we are symmetric
+  // Make sure symmetricity
   int v0 = 0;
   for (int v = kHalfPatchSize; v >= v_min; --v) {
     while (u_max_list[v0] == u_max_list[v0 + 1]) ++v0;
     u_max_list[v] = v0;
     ++v0;
-  }
-
-  for (int v = 0; v <= kHalfPatchSize; ++v) {
-    std::cerr << v << ", " << u_max_list[v] << std::endl;
   }
 
   return u_max_list;
@@ -409,7 +400,7 @@ std::vector<int> OrbExtractor::ComputeNumFeaturesPerLevel(
                       static_cast<double>(num_scale_levels)));
 
   int accumulated_sum_of_num_features = 0;
-  for (int level = 0; level < num_scale_levels - 1; level++) {
+  for (int level = 0; level < num_scale_levels - 1; ++level) {
     num_features_per_level[level] = std::round(num_desired_features_per_level);
     accumulated_sum_of_num_features += num_features_per_level[level];
     num_desired_features_per_level *= inverse_scale_factor;
@@ -422,99 +413,113 @@ std::vector<int> OrbExtractor::ComputeNumFeaturesPerLevel(
 
 std::vector<Feature> OrbExtractor::ExtractFastFeatures(
     const cv::Mat& image, const int num_features, const int level,
-    const double scale_factor, const int fast_threshold) {
+    const double scale_factor, const int fast_threshold_high,
+    const int fast_threshold_low) {
   static constexpr int kPatchSize{31};
-  static constexpr int kEdgeThreshold{19};
   static constexpr double kCellSize{35.0};
+  constexpr int kFastPatternRadius{3};
   static constexpr bool kUseNonMaxSuppression{true};
 
-  const int image_height = image.rows;
-  const int image_width = image.cols;
+  const int half_patch_size = kPatchSize / 2;
 
   std::vector<Feature> features;
-  const int minBorderX = kEdgeThreshold - 3;
-  const int minBorderY = minBorderX;
-  const int maxBorderX = image_width - kEdgeThreshold + 3;
-  const int maxBorderY = image_height - kEdgeThreshold + 3;
-
   std::vector<cv::KeyPoint> keypoints_to_distribute;
   keypoints_to_distribute.reserve(num_features * 10);
 
-  const double reduced_image_width = (maxBorderX - minBorderX);
-  const double reduced_image_height = (maxBorderY - minBorderY);
-  const int num_cells_u = reduced_image_width / kCellSize;
-  const int num_cells_v = reduced_image_height / kCellSize;
-  const int cell_width = std::ceil(reduced_image_width / num_cells_u);
-  const int cell_height = std::ceil(reduced_image_height / num_cells_v);
+  const int num_cells_v = std::floor(image.rows / kCellSize);
+  const int num_cells_u = std::floor(image.cols / kCellSize);
+  const int cell_height =
+      std::ceil(image.rows / static_cast<double>(num_cells_v));
+  const int cell_width =
+      std::ceil(image.cols / static_cast<double>(num_cells_u));
 
-  for (int row = 0; row < num_cells_v; row++) {
-    const float left_top_v = minBorderY + row * cell_height;
-    float right_bottom_v = left_top_v + cell_height + 6;
+  for (int row = 0; row < num_cells_v; ++row) {
+    int top_v = row * cell_height - kFastPatternRadius;
+    if (top_v >= image.rows - kFastPatternRadius) continue;
+    if (top_v <= 0) top_v = 0;
+    int bottom_v = top_v + cell_height + 2 * kFastPatternRadius;
+    if (bottom_v >= image.rows) bottom_v = image.rows - 1;
 
-    if (left_top_v >= maxBorderY - 3) continue;
-    if (right_bottom_v > maxBorderY) right_bottom_v = maxBorderY;
-
-    for (int col = 0; col < num_cells_u; col++) {
-      const float left_top_u = minBorderX + col * cell_width;
-      float right_bottom_u = left_top_u + cell_width + 6;
-      if (left_top_u >= maxBorderX - 6) continue;
-      if (right_bottom_u > maxBorderX) right_bottom_u = maxBorderX;
+    for (int col = 0; col < num_cells_u; ++col) {
+      int left_u = col * cell_width - kFastPatternRadius;
+      if (left_u >= image.cols - kFastPatternRadius) continue;
+      if (left_u <= 0) left_u = 0;
+      int right_u = left_u + cell_width + 2 * kFastPatternRadius;
+      if (right_u >= image.cols) right_u = image.cols - 1;
 
       std::vector<cv::KeyPoint> keypoints;
-      cv::FAST(image.rowRange(left_top_v, right_bottom_v)
-                   .colRange(left_top_u, right_bottom_u),
-               keypoints, fast_threshold, kUseNonMaxSuppression);
-
+      cv::FAST(image.rowRange(top_v, bottom_v).colRange(left_u, right_u),
+               keypoints, fast_threshold_high, kUseNonMaxSuppression);
       if (keypoints.empty()) {
-        const int fast_threshold_low = static_cast<int>(fast_threshold * 0.33);
-        cv::FAST(image.rowRange(left_top_v, right_bottom_v)
-                     .colRange(left_top_u, right_bottom_u),
+        cv::FAST(image.rowRange(top_v, bottom_v).colRange(left_u, right_u),
                  keypoints, fast_threshold_low, kUseNonMaxSuppression);
       }
       if (keypoints.empty()) continue;
 
-      const int u_offset = col * cell_width;
-      const int v_offset = row * cell_height;
+      const int u_offset = left_u;
+      const int v_offset = top_v;
       for (auto it = keypoints.begin(); it != keypoints.end(); it++) {
         (*it).pt.x += u_offset;
         (*it).pt.y += v_offset;
+        if ((*it).pt.x <= half_patch_size - 1 ||
+            (*it).pt.x >= image.cols - half_patch_size - 1)
+          continue;
+        if ((*it).pt.y <= half_patch_size ||
+            (*it).pt.y >= image.rows - half_patch_size - 1)
+          continue;
         keypoints_to_distribute.push_back(*it);
       }
     }
   }
+  std::cerr << keypoints_to_distribute.size() << std::endl;
 
-  std::vector<cv::KeyPoint> distributed_keypoints;
-  distributed_keypoints =
-      DistributeOctTree(keypoints_to_distribute, minBorderX, maxBorderX,
-                        minBorderY, maxBorderY, num_features);
-
-  const int scaled_patch_size = kPatchSize * std::pow(scale_factor, level - 1);
+  // auto distributed_keypoints = keypoints_to_distribute;
+  auto distributed_keypoints = DistributeFeaturesByOctTree(
+      keypoints_to_distribute, half_patch_size, image.cols - half_patch_size,
+      half_patch_size, image.rows - half_patch_size, num_features);
 
   // Add border to coordinates and scale information
-  const int nkps = distributed_keypoints.size();
-  for (int index = 0; index < nkps; ++index) {
-    distributed_keypoints[index].pt.x += minBorderX;
-    distributed_keypoints[index].pt.y += minBorderY;
-    distributed_keypoints[index].octave = level;
-    distributed_keypoints[index].size = scaled_patch_size;
+  const size_t num_keypoints = distributed_keypoints.size();
+  for (size_t feature_index = 0; feature_index < num_keypoints;
+       ++feature_index) {
+    distributed_keypoints[feature_index].octave = level;
   }
 
-  std::vector<Feature> all_features;
+  // Calculate feature angles
+  auto feature_angles = CalculateFeatureAngle(image, distributed_keypoints);
+
+  // Calculate feature descriptors
+  std::vector<Descriptor> descriptors;
+
+  // Finalize features
+  const double scale_factor_of_this_level = std::pow(scale_factor, level);
+  std::vector<Feature> all_features(num_keypoints);
+  for (size_t feature_index = 0; feature_index < num_keypoints;
+       ++feature_index) {
+    const auto& kpt = distributed_keypoints[feature_index];
+    auto& feature = all_features[feature_index];
+    feature.pixel.x() = kpt.pt.x * scale_factor_of_this_level;
+    feature.pixel.y() = kpt.pt.y * scale_factor_of_this_level;
+    feature.octave = kpt.octave;
+    feature.angle = feature_angles[feature_index];
+    // all_features[feature_index].descriptor = descriptors[feature_index];
+  }
+
   return all_features;
 }
 
 std::vector<float> OrbExtractor::CalculateFeatureAngle(
-    const cv::Mat& image, const std::vector<Pixel>& pts) {
+    const cv::Mat& image, const std::vector<cv::KeyPoint>& keypoints) {
   static constexpr int kHalfPatchSize{15};
 
-  const size_t n_pts = pts.size();
+  const size_t num_keypoints = keypoints.size();
   std::vector<float> angle_list;
-  angle_list.reserve(n_pts);
+  angle_list.reserve(num_keypoints);
 
-  for (size_t index = 0; index < n_pts; ++index) {
-    const auto& pt = pts[index];
-    const auto round_u = std::round(pt.x());
-    const auto round_v = std::round(pt.y());
+  for (size_t index = 0; index < num_keypoints; ++index) {
+    const auto& pt = keypoints[index].pt;
+    const auto round_u = std::round(pt.x);
+    const auto round_v = std::round(pt.y);
     const uint8_t* center_ptr = &image.at<uint8_t>(round_v, round_u);
     int centroid_u = 0;
     int centroid_v = 0;

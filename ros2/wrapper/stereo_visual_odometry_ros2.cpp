@@ -31,13 +31,51 @@
 
 namespace visual_odometry {
 
+int encoding2mat_type(const std::string& encoding) {
+  if (encoding == "mono8")
+    return CV_8UC1;
+  else if (encoding == "bgr8")
+    return CV_8UC3;
+  else if (encoding == "mono16")
+    return CV_16SC1;
+  else if (encoding == "rgba8")
+    return CV_8UC4;
+  else if (encoding == "bgra8")
+    return CV_8UC4;
+  else if (encoding == "32FC1")
+    return CV_32FC1;
+  else if (encoding == "rgb8")
+    return CV_8UC3;
+  else
+    throw std::runtime_error("Unsupported encoding type");
+}
+
+std::string mat_type2encoding(int mat_type) {
+  switch (mat_type) {
+    case CV_8UC1:
+      return "mono8";
+    case CV_8UC3:
+      return "bgr8";
+    case CV_16SC1:
+      return "mono16";
+    case CV_8UC4:
+      return "rgba8";
+    default:
+      throw std::runtime_error("Unsupported encoding type");
+  }
+}
+
 StereoVisualOdometryRos2::StereoVisualOdometryRos2(const std::string& node_name)
     : Node(node_name) {
   stereo_vo_ = std::make_unique<StereoVisualOdometry>();
 
   // Subscribers
-  subscriber_left_image_.subscribe(this, topic_names.subscribe.left_image);
-  subscriber_right_image_.subscribe(this, topic_names.subscribe.right_image);
+  subscriber_left_image_.subscribe(
+      this, topic_names.subscribe.left_image,
+      rclcpp::SensorDataQoS().get_rmw_qos_profile());
+  subscriber_right_image_.subscribe(
+      this, topic_names.subscribe.right_image,
+      rclcpp::SensorDataQoS().get_rmw_qos_profile());
   stereo_synchronizer_ =
       std::make_shared<message_filters::TimeSynchronizer<ImageMsg, ImageMsg>>(
           subscriber_left_image_, subscriber_right_image_, 10);
@@ -51,8 +89,19 @@ StereoVisualOdometryRos2::~StereoVisualOdometryRos2() {}
 void StereoVisualOdometryRos2::CallbackMessagesForStereoImages(
     const sensor_msgs::msg::Image::ConstSharedPtr& msg_left,
     const sensor_msgs::msg::Image::ConstSharedPtr& msg_right) {
-  (void)msg_left;
-  (void)msg_right;
+  const double current_timestamp =
+      static_cast<double>(msg_left->header.stamp.sec) +
+      static_cast<double>(msg_left->header.stamp.nanosec) * 1e-9;
+
+  cv::Mat left_image(
+      msg_left->height, msg_left->width, encoding2mat_type(msg_left->encoding),
+      const_cast<unsigned char*>(msg_left->data.data()), msg_left->step);
+  cv::Mat right_image(msg_right->height, msg_right->width,
+                      encoding2mat_type(msg_right->encoding),
+                      const_cast<unsigned char*>(msg_right->data.data()),
+                      msg_right->step);
+
+  stereo_vo_->TrackStereoImages(current_timestamp, left_image, right_image);
 }
 
 }  // namespace visual_odometry
